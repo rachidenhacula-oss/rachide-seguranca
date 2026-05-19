@@ -60,12 +60,16 @@ def enviar_para_whatsapp(texto_critica):
 
 # Execução principal do script
 if __name__ == "__main__":
-    print("Iniciando varredura do Robô de Segurança...")
-    tema_coletado = buscar_dados_seguranca()
-    print(f"Tema detectado: {tema_coletado}")
-    
-    critica = gerar_critica_academica(tema_coletado)
-    print("Crítica gerada pela Inteligência Artificial.")
-    
-    enviar_para_whatsapp(critica)
-    print("Processo finalizado. Aguardando próxima execução.")
+    while True:
+        print("Iniciando varredura do Robô de Segurança...")
+        tema_coletado = buscar_dados_seguranca()
+        print(f"Tema detectado: {tema_coletado}")
+        
+        critica = gerar_critica_academica(tema_coletado)
+        print("Crítica gerada pela Inteligência Artificial.")
+        
+        enviar_para_whatsapp(critica)
+        print("Processo finalizado. Aguardando próxima execução...")
+        
+        # Faz o robô esperar 1 hora (3600 segundos) antes de verificar novamente
+        time.sleep(3600) 
