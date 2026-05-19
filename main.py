@@ -12,7 +12,7 @@ TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "seu_token_aqui")
 
 # Números de telefone para o WhatsApp (Formato internacional: +55... ou +258...)
 WHATSAPP_DE = "whatsapp:+14155238886"  # Número padrão do Sandbox do Twilio
-WHATSAPP_PARA = "whatsapp:+258840000000" # Substitua pelo SEU número do WhatsApp
+WHATSAPP_PARA = "whatsapp:+258840258114" # Substitua pelo SEU número do WhatsApp
 
 # 2. Inicialização dos Clientes das APIs
 client_openai = OpenAI(api_key=OPENAI_API_KEY)
