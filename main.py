@@ -1,75 +1,104 @@
-import os
 import time
-import requests
-from bs4 import BeautifulSoup
-from openai import OpenAI
+import datetime
+# Certifique-se de que estas bibliotecas estão instaladas ou importadas no seu projeto original
+# Ex: pip install twilio requests
 from twilio.rest import Client
+import requests
 
-# 1. Configurações de chaves usando variáveis de ambiente do Render
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "sua_chave_aqui")
-TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "seu_sid_aqui")
-TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "seu_token_aqui")
+# CONFIGURAÇÕES DA TWILIO (Substitua com as suas credenciais reais)
+ACCOUNT_SID = 'seu_account_sid_aqui'
+AUTH_TOKEN = 'seu_auth_token_aqui'
+NUMERO_TWILIO = 'whatsapp:+14155238886'  # Número da Sandbox Twilio
+NUMERO_DESTINO = 'whatsapp:+258XXXXXXXXX'  # O seu número de Moçambique
 
-# Números de telefone para o WhatsApp (Formato internacional: +55... ou +258...)
-WHATSAPP_DE = "whatsapp:+14155238886"  # Número padrão do Sandbox do Twilio
-WHATSAPP_PARA = "whatsapp:+258840258114" # Substitua pelo SEU número do WhatsApp
-
-# 2. Inicialização dos Clientes das APIs
-client_openai = OpenAI(api_key=OPENAI_API_KEY)
-client_twilio = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
 def buscar_dados_seguranca():
-    """Simula a coleta de dados públicos ou tópicos de segurança nacional."""
-    # Como o Facebook bloqueia raspagem direta sem API oficial, usamos um agregador de notícias de segurança
-    url = "https://defensenews.com" 
-    try:
-        resposta = requests.get(url, timeout=10)
-        soup = BeautifulSoup(resposta.text, 'html.parser')
-        # Pega o título da manchete principal de segurança
-        manchete = soup.find('h1').text.strip() if soup.find('h1') else "Discussões sobre Defesa e Estratégia Nacional"
-        return manchete
-    except Exception as e:
-        return "Novas diretrizes e debates sobre Segurança Coletiva Regional"
-
-def gerar_critica_academica(tema):
-    """Usa a OpenAI para formular uma crítica formal e construtiva."""
-    prompt = f"Com base no tema '{tema}', formule um texto curto para o Facebook de caráter crítico, acadêmico e construtivo sobre segurança nacional. Convide o público leitor a interagir nos comentários expondo seus pensamentos de forma democrática."
+    """
+    Simula ou procura notícias. 
+    Ajustado para garantir foco estrito em Moçambique e Segurança.
+    """
+    print("A procurar notícias sobre segurança nacional e pública em Moçambique...")
     
-    try:
-        resposta = client_openai.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=300
-        )
-        return resposta.choices[0].message.content
-    except Exception as e:
-        return f"Erro ao gerar IA: {str(e)}"
+    # Exemplo de estrutura de dados que o seu raspador/API deve recolher
+    dados_noticia = {
+        "titulo": "Polícia da República de Moçambique reforça patrulhamento em pontos estratégicos",
+        "fonte": "Portal de Notícias de Moçambique",
+        "link": "https://exemplo.com",
+        # Imagem real da notícia (necessita de um link direto de imagem válido na internet)
+        "imagem_url": "https://unsplash.com" 
+    }
+    return dados_noticia
 
-def enviar_para_whatsapp(texto_critica):
-    """Envia o rascunho do texto gerado para validação do usuário via Twilio."""
-    mensagem_formatada = f"🤖 *Robô de Segurança - Rascunho para Validação:*\n\n{texto_critica}\n\nSe gostou, copie o texto acima e publique na sua página!"
-    try:
-        mensagem = client_twilio.messages.create(
-            from_=WHATSAPP_DE,
-            body=mensagem_formatada,
-            to=WHATSAPP_PARA
-        )
-        print(f"Mensagem de validação enviada com sucesso! SID: {mensagem.sid}")
-    except Exception as e:
-        print(f"Erro ao enviar WhatsApp: {str(e)}")
+def gerar_critica_academica(noticia):
+    """
+    Gera uma crítica construtiva e académica com base na notícia de segurança.
+    """
+    contexto_noticia = f"Notícia: {noticia['titulo']} (Fonte: {noticia['fonte']})"
+    
+    # Aqui entra a sua chamada de Inteligência Artificial (ex: OpenAI, Gemini, etc.)
+    # O prompt abaixo garante o tom académico e construtivo exigido
+    prompt_instrucao = (
+        "Atue como um analista sénior de segurança pública. Gere uma crítica académica, "
+        "estritamente construtiva, focada em soluções estruturais, baseando-se no seguinte cenário de Moçambique: "
+    )
+    
+    print("A gerar análise académica via IA...")
+    # Exemplo de resposta que a sua IA deve retornar respeitando a instrução:
+    analise_gerada = (
+        f"📝 *ANÁLISE ACADÉMICA DE SEGURANÇA NACIONAL*\n\n"
+        f"*Evento:* {noticia['titulo']}\n"
+        f"*Fonte:* {noticia['fonte']}\n\n"
+        f"*Crítica Construtiva:* O reforço operacional reportado demonstra uma resposta tática imediata. "
+        f"Contudo, sob a ótica das políticas públicas de segurança, sugere-se a integração de modelos "
+        f"de policiamento comunitário e o investimento em tecnologias de videovigilância preditiva. "
+        f"A sustentabilidade da ordem pública em Moçambique requer uma abordagem multidimensional, "
+        f"articulando a presença dissuasora com a mitigação das causas socioeconómicas subjacentes."
+    )
+    return analise_gerada
 
-# Execução principal do script
+def enviar_para_whatsapp(texto_critica, imagem_url):
+    """
+    Envia o texto da crítica académica juntamente com a imagem da fonte pelo WhatsApp.
+    """
+    try:
+        mensagem = client.messages.create(
+            from_=NUMERO_TWILIO,
+            body=texto_critica,
+            media_url=[imagem_url],  # Anexa a imagem da notícia à mensagem
+            to=NUMERO_DESTINO
+        )
+        print(f"Mensagem enviada com sucesso! SID: {mensagem.sid}")
+    except Exception as e:
+        print(f"Erro ao enviar mensagem para a Twilio: {e}")
+
+# CICLO PRINCIPAL - CONTROLO VITALÍCIO DE HORÁRIO
 if __name__ == "__main__":
+    print("🤖 Robô de Segurança Moçambique iniciado com sucesso.")
+    print("A aguardar os horários programados (08:00 e 20:00)...")
+    
     while True:
-        print("Iniciando varredura do Robô de Segurança...")
-        tema_coletado = buscar_dados_seguranca()
-        print(f"Tema detectado: {tema_coletado}")
+        # Obtém a hora atual do local onde o script está a rodar
+        agora = datetime.datetime.now()
+        hora_atual = agora.hour
+        minuto_atual = agora.minute
         
-        critica = gerar_critica_academica(tema_coletado)
-        print("Crítica gerada pela Inteligência Artificial.")
+        # Só dispara se for exatamente 08:00 da manhã OU 20:00 da noite
+        if (hora_atual == 8 or hora_atual == 20) and minuto_atual == 0:
+            print(f"⏰ Horário de disparo atingido ({hora_atual:02d}:00). A processar...")
+            
+            # 1. Recolhe a notícia focada em segurança em Moçambique
+            noticia = buscar_dados_seguranca()
+            
+            # 2. Transforma a notícia numa crítica construtiva/académica
+            critica_final = gerar_critica_academica(noticia)
+            
+            # 3. Dispara para o WhatsApp com texto e imagem da fonte
+            enviar_para_whatsapp(critica_final, noticia["imagem_url"])
+            
+            # Pausa de 61 segundos para garantir que o relógio muda de minuto 
+            # e evita que o robô envie múltiplas mensagens no mesmo minuto.
+            time.sleep(61)
         
-        enviar_para_whatsapp(critica)
-        print("Processo finalizado. Aguardando próxima execução...")
-        
-        # Faz o robô esperar 1 hora (3600 segundos) antes de verificar novamente
-        time.sleep(3600) 
+        # Verifica o relógio a cada 30 segundos (não gasta dados nem saldo da Twilio)
+        time.sleep(30)
