@@ -9,7 +9,7 @@ import requests
 ACCOUNT_SID = 'seu_account_sid_aqui'
 AUTH_TOKEN = 'seu_auth_token_aqui'
 NUMERO_TWILIO = 'whatsapp:+14155238886'  # Número da Sandbox Twilio
-NUMERO_DESTINO = 'whatsapp:+258XXXXXXXXX'  # O seu número de Moçambique
+NUMERO_DESTINO = 'whatsapp:+258840258114'  # O seu número de Moçambique
 
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
