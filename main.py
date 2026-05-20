@@ -4,10 +4,10 @@ import datetime
 # Ex: pip install twilio requests
 from twilio.rest import Client
 import requests
-
+import os
 # CONFIGURAÇÕES DA TWILIO (Substitua com as suas credenciais reais)
-ACCOUNT_SID = 'seu_account_sid_aqui'
-AUTH_TOKEN = 'seu_auth_token_aqui'
+ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 NUMERO_TWILIO = 'whatsapp:+14155238886'  # Número da Sandbox Twilio
 NUMERO_DESTINO = 'whatsapp:+258840258114'  # O seu número de Moçambique
 
