@@ -94,11 +94,51 @@ if __name__ == "__main__":
             critica_final = gerar_critica_academica(noticia)
             
             # 3. Dispara para o WhatsApp com texto e imagem da fonte
-            enviar_para_whatsapp(critica_final, noticia["imagem_url"])
-            
-            # Pausa de 61 segundos para garantir que o relógio muda de minuto 
-            # e evita que o robô envie múltiplas mensagens no mesmo minuto.
-            time.sleep(61)
+            def enviar_para_whatsapp(texto_critica, imagem_url):
+    """
+    Envia o texto da crítica académica juntamente com a imagem da fonte pelo WhatsApp.
+    """
+    try:
+        mensagem = client.messages.create(
+            from_=NUMERO_TWILIO,
+            body=texto_critica,
+            media_url=[imagem_url],  # Anexa a imagem da notícia à mensagem
+            to=NUMERO_DESTINO
+        )
+        print(f"Mensagem enviada com sucesso! SID: {mensagem.sid}")
+    except Exception as e:
+        print(f"Erro ao enviar mensagem: {e}")
+
+# =========================================================
+# SERVIDOR WEB PARA O RENDER E RECEBIMENTO DA TWILIO
+# =========================================================
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class WebhookHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        # Mantém o Render feliz dizendo que o bot está online ao abrir o link
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html; charset=utf-8')
+        self.end_headers()
+        self.wfile.write("Bot de Segurança Ativo! 🚀".encode('utf-8'))
+
+    def do_POST(self):
+        # Recebe a mensagem da Twilio, evita o erro 501 e responde com sucesso
+        self.send_response(200)
+        self.send_header('Content-type', 'text/xml; charset=utf-8')
+        self.end_headers()
+        resposta_twilio = "<Response></Response>"
+        self.wfile.write(resposta_twilio.encode('utf-8'))
         
-        # Verifica o relógio a cada 30 segundos (não gasta dados nem saldo da Twilio)
-        time.sleep(30)
+        # Opcional: Aciona a lógica de envio ao receber mensagens
+        print("Mensagem recebida do WhatsApp! A processar fluxo...")
+        noticia = buscar_dados_seguranca()
+        critica = gerar_critica_academica(noticia)
+        enviar_para_whatsapp(critica, noticia["imagem_url"])
+
+if __name__ == "__main__":
+    # O Render passa a porta dinamicamente na variável de ambiente PORT, padrão 10000
+    porta = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(('0.0.0.0', porta), WebhookHandler)
+    print(f"Servidor do Bot rodando na porta {porta}...")
+    server.serve_forever()
