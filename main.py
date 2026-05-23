@@ -71,12 +71,16 @@ def webhook():
     return "<Response></Response>", 200
 
 if __name__ == "__main__":
-    # Inicia o relogio em segundo plano
-    t = threading.Thread(target=loop_relogio_horario, daemon=True)
+    # 1. Cria uma função para iniciar a thread com um pequeno delay
+    def iniciar_thread_segura():
+        # Aguarda 5 segundos para o Flask se estabilizar na porta da Render
+        time.sleep(5) 
+        loop_relogio_horario()
+
+    # 2. Dispara a thread em segundo plano
+    t = threading.Thread(target=iniciar_thread_segura, daemon=True)
     t.start()
     
-    # Inicia o servidor Flask na porta correta do Render
+    # 3. Inicia o Flask IMEDIATAMENTE (alta prioridade para a Render)
     porta = int(os.environ.get("PORT", 10000))
-    
-    # ATENÇÃO: use_reloader=False evita que o processo duplique e trave a porta
     app.run(host='0.0.0.0', port=porta, debug=False, use_reloader=False)
