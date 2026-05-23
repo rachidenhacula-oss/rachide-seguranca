@@ -77,4 +77,6 @@ if __name__ == "__main__":
     
     # Inicia o servidor Flask na porta correta do Render
     porta = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=porta)
+    
+    # ATENÇÃO: use_reloader=False evita que o processo duplique e trave a porta
+    app.run(host='0.0.0.0', port=porta, debug=False, use_reloader=False)
