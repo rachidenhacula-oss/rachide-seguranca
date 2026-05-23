@@ -1,10 +1,12 @@
 import time
 import datetime
 from twilio.rest import Client
-import requests
 import os
 import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from flask import Flask
+
+# Inicializa o Flask para manter o Render feliz
+app = Flask(__name__)
 
 ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
@@ -59,27 +61,20 @@ def loop_relogio_horario():
             time.sleep(61)
         time.sleep(30)
 
-class WebhookHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html; charset=utf-8')
-        self.end_headers()
-        self.wfile.write("Bot Ativo! 🚀".encode('utf-8'))
+@app.route('/')
+def home():
+    return "Bot Ativo! 🚀", 200
 
-    def do_POST(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/xml; charset=utf-8')
-        self.end_headers()
-        self.wfile.write("<Response></Response>".encode('utf-8'))
-        print("📩 Mensagem recebida!")
-        noticia = buscar_dados_seguranca()
-        critica = gerar_critica_academica(noticia)
-        enviar_para_whatsapp(critica, noticia["imagem_url"])
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    print("📩 Mensagem recebida via Webhook!")
+    return "<Response></Response>", 200
 
 if __name__ == "__main__":
+    # Inicia o relogio em segundo plano
     t = threading.Thread(target=loop_relogio_horario, daemon=True)
     t.start()
+    
+    # Inicia o servidor Flask na porta correta do Render
     porta = int(os.environ.get("PORT", 10000))
-    server = HTTPServer(('0.0.0.0', porta), WebhookHandler)
-    print(f"🚀 Servidor na porta {porta}...")
-    server.serve_forever()
+    app.run(host='0.0.0.0', port=porta)
