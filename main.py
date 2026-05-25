@@ -101,19 +101,12 @@ def enviar_para_whatsapp(texto_critica):
         print(f"❌ Erro crítico na Twilio: {e}")
 
 def loop_relogio_horario():
-    print("⏰ Relogio iniciado...")
-    print("🚀 Executando disparo de teste inicial...")
-    
-    # Teste imediato assim que a aplicação sobe
-    noticia_teste = buscar_dados_seguranca()
-    critica_teste = gerar_critica_academica(noticia_teste)
-    enviar_para_whatsapp(critica_teste)
-
+    print("⏰ Relogio de agendamento ativado...")
     while True:
         agora = datetime.datetime.now()
-        # Horário do Render é UTC. 06h UTC = 08h em Moçambique / 18h UTC = 20h em Moçambique
+        # 06:00 UTC = 08:00 em Moçambique / 18:00 UTC = 20:00 em Moçambique
         if (agora.hour == 6 or agora.hour == 18) and agora.minute == 0:
-            print(f"⏰ Horario atingido ({agora.hour:02d}:00 UTC / {agora.hour+2:02d}:00 Local).")
+            print(f"⏰ Horario atingido ({agora.hour:02d}:00 UTC).")
             noticia = buscar_dados_seguranca()
             critica = gerar_critica_academica(noticia)
             enviar_para_whatsapp(critica)
@@ -124,15 +117,17 @@ def loop_relogio_horario():
 def home():
     return "Bot Ativo! 🚀", 200
 
-# CORREÇÃO AQUI: Executa a thread em segundo plano assim que a primeira requisição chega
-@app.before_request
-def iniciar_background_job():
-    if not hasattr(app, 'thread_iniciada'):
-        print("⚙️ Primeira requisição recebida. Iniciando tarefas em segundo plano...")
-        t = threading.Thread(target=loop_relogio_horario, daemon=True)
-        t.start()
-        app.thread_iniciada = True
-
 if __name__ == "__main__":
+    print("🚀 EXECUTANDO DISPARO DE TESTE INICIAL...")
+    # Executa o teste imediatamente na thread principal para garantir que roda
+    noticia_teste = buscar_dados_seguranca()
+    critica_teste = gerar_critica_academica(noticia_teste)
+    enviar_para_whatsapp(critica_teste)
+    
+    print("🔄 Iniciando o relogio de agendamento em segundo plano...")
+    t = threading.Thread(target=loop_relogio_horario, daemon=True)
+    t.start()
+    
     porta = int(os.environ.get("PORT", 10000))
+    print(f"📡 Iniciando Servidor Web Flask na porta {porta}...")
     app.run(host='0.0.0.0', port=porta, debug=False, use_reloader=False)
