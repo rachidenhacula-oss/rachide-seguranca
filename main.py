@@ -7,18 +7,17 @@ from flask import Flask
 
 app = Flask(__name__)
 
-# Configurações da Twilio com fallback para testes locais se necessário
+# Configurações da Twilio obtidas do ambiente do Render
 ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 NUMERO_TWILIO = 'whatsapp:+14155238886'
 NUMERO_DESTINO = 'whatsapp:+258840258114'
 
-# Só inicializa o cliente se as variáveis existirem no Render
 if ACCOUNT_SID and AUTH_TOKEN:
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
 else:
     client = None
-    print("⚠️ ATENÇÃO: TWILIO_ACCOUNT_SID ou TWILIO_AUTH_TOKEN não foram configurados no Render!")
+    print("⚠️ ATENÇÃO: TWILIO_ACCOUNT_SID ou TWILIO_AUTH_TOKEN não configurados no Render!")
 
 def buscar_dados_seguranca():
     print("A procurar noticias...")
@@ -31,7 +30,7 @@ def gerar_critica_academica(noticia):
     print("A gerar analise...")
     return (
         f"📝 *TESTE DE SISTEMA - SEGURANÇA*\n\n"
-        f"*Event:* {noticia['titulo']}\n"
+        f"*Evento:* {noticia['titulo']}\n"
         f"*Fonte:* {noticia['fonte']}\n\n"
         f"*Analise:* O reforco operacional demonstra resposta imediata."
     )
@@ -42,7 +41,6 @@ def enviar_para_whatsapp(texto_critica):
         return
         
     try:
-        # REMOVIDO O MEDIA_URL PARA FACILITAR O ENVIO
         mensagem = client.messages.create(
             from_=NUMERO_TWILIO,
             body=texto_critica,
@@ -56,16 +54,16 @@ def loop_relogio_horario():
     print("⏰ Relogio iniciado...")
     print("🚀 Executando disparo de teste inicial...")
     
-    # Teste inicial para ver se funciona assim que o bot liga
+    # Teste imediato assim que a aplicação sobe
     noticia_teste = buscar_dados_seguranca()
     critica_teste = gerar_critica_academica(noticia_teste)
     enviar_para_whatsapp(critica_teste)
 
     while True:
         agora = datetime.datetime.now()
-        # Nota: O Render usa o horário UTC por padrão!
-        if (agora.hour == 8 or agora.hour == 20) and agora.minute == 0:
-            print(f"⏰ Horario atingido ({agora.hour:02d}:00 UTC).")
+        # Horário do Render é UTC. 06h UTC = 08h em Moçambique / 18h UTC = 20h em Moçambique
+        if (agora.hour == 6 or agora.hour == 18) and agora.minute == 0:
+            print(f"⏰ Horario atingido ({agora.hour:02d}:00 UTC / {agora.hour+2:02d}:00 Local).")
             noticia = buscar_dados_seguranca()
             critica = gerar_critica_academica(noticia)
             enviar_para_whatsapp(critica)
@@ -76,11 +74,11 @@ def loop_relogio_horario():
 def home():
     return "Bot Ativo! 🚀", 200
 
-# Função que dispara a thread DEPOIS que o Flask inicia para não travar o Render
-@app.before_all_requests
+# CORREÇÃO AQUI: Executa a thread em segundo plano assim que a primeira requisição chega
+@app.before_request
 def iniciar_background_job():
-    # Garante que roda apenas uma vez
     if not hasattr(app, 'thread_iniciada'):
+        print("⚙️ Primeira requisição recebida. Iniciando tarefas em segundo plano...")
         t = threading.Thread(target=loop_relogio_horario, daemon=True)
         t.start()
         app.thread_iniciada = True
