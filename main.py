@@ -21,7 +21,6 @@ else:
     print("⚠️ ATENÇÃO: Credenciais Twilio ausentes no Render!")
 
 PROXIMO_ENVIO = None
-TESTE_INICIAL_REALIZADO = False
 
 def obter_hora_mocambique():
     return datetime.datetime.utcnow() + datetime.timedelta(hours=2)
@@ -106,19 +105,15 @@ def loop_relogio_agendamento():
 
 @app.route('/')
 def home():
-    global TESTE_INICIAL_REALIZADO
-    hora_local = obter_hora_mocambique()
-    print(f"💤 Robô acordado por ping externo às {hora_local.strftime('%H:%M:%S')} (Hora de Moçambique)")
-    
-    # Executa o disparo de teste de forma segura no primeiro ping que o Render receber
-    if not TESTE_INICIAL_REALIZADO:
-        TESTE_INICIAL_REALIZADO = True
-        print("🚀 Executando disparo de teste inicial seguro via Web Hook...")
+    print("🚀 Forçando disparo manual por solicitação do usuário...")
+    try:
         noticia_teste = buscar_dados_seguranca()
         critica_teste = gerar_critica_academica(noticia_teste)
         enviar_para_whatsapp(critica_teste)
+    except Exception as e:
+        print(f"❌ Erro ao processar disparo manual: {e}")
         
-    return "Bot Ativo e Acordado! 🚀", 200
+    return "Disparo Executado! Verifique o WhatsApp. 🚀", 200
 
 if __name__ == "__main__":
     print("🔄 Inicializando relógio de agendamento...")
