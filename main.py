@@ -4,11 +4,11 @@ from twilio.rest import Client
 import os
 import threading
 from flask import Flask
-import feedparser  # <--- Nova biblioteca para ler notícias reais
+import feedparser
 
 app = Flask(__name__)
 
-# [Mantenha as suas configurações da Twilio aqui iguais ao código anterior]
+# Configurações das credenciais da Twilio vindas do Render
 ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 NUMERO_TWILIO = 'whatsapp:+14155238886'
@@ -18,6 +18,7 @@ if ACCOUNT_SID and AUTH_TOKEN:
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
 else:
     client = None
+    print("⚠️ ATENÇÃO: Credenciais Twilio ausentes nas variáveis do Render!")
 
 PROXIMO_ENVIO = None
 
@@ -25,6 +26,7 @@ def obter_hora_mocambique():
     return datetime.datetime.utcnow() + datetime.timedelta(hours=2)
 
 def calcular_proximo_bloco_6h(hora_atual):
+    # CORRIGIDO: Lista de horários restaurada corretamente
     horas_alvo = [0, 6, 12, 18]
     for hora in horas_alvo:
         if hora_atual.hour < hora:
@@ -32,19 +34,14 @@ def calcular_proximo_bloco_6h(hora_atual):
     amanha = hora_atual + datetime.timedelta(days=1)
     return amanha.replace(hour=0, minute=0, second=0, microsecond=0)
 
-
-# ==================== NOVA FUNÇÃO DE NOTÍCIAS REAIS ====================
 def buscar_dados_seguranca():
     print("🛰️ Acedendo aos portais de notícias em tempo real...")
-    
-    # URL do Feed de notícias focado em Moçambique (DW África)
     url_feed = "https://dw.com"
     
     try:
         feed = feedparser.parse(url_feed)
-        
-        # Filtra as notícias para tentar encontrar termos relacionados a Moçambique
         noticias_mocambique = []
+        
         for entrada in feed.entries:
             titulo = entrada.title.lower()
             resumo = entrada.summary.lower() if 'summary' in entrada else ""
@@ -52,15 +49,13 @@ def buscar_dados_seguranca():
             if "moçambique" in titulo or "maputo" in titulo or "beira" in titulo or "nampula" in titulo or "moçambique" in resumo:
                 noticias_mocambique.append(entrada)
         
-        # Se encontrou uma notícia específica de Moçambique, usa a mais recente
         if noticias_mocambique:
             nova_noticia = noticias_mocambique[0]
             return {
                 "titulo": nova_noticia.title,
-                "fonte": f"DW África (Atualizado em tempo real) - Link: {nova_noticia.link}"
+                "fonte": f"DW África - Link: {nova_noticia.link}"
             }
         
-        # Caso não haja nenhuma de Moçambique nas últimas horas, pega a principal de África geral
         if feed.entries:
             noticia_geral = feed.entries[0]
             return {
@@ -71,13 +66,10 @@ def buscar_dados_seguranca():
     except Exception as e:
         print(f"⚠️ Falha ao ler notícias online ({e}). Usando notícia de contingência.")
         
-    # Notícia de segurança caso a internet ou o portal falhem no segundo do disparo
     return {
         "titulo": "Governo de Moçambique analisa novos planos de desenvolvimento e segurança económica",
         "fonte": "Portal de Monitoria Nacional"
     }
-# =======================================================================
-
 
 def gerar_critica_academica(noticia):
     print("🔬 A gerar análise profunda da notícia real...")
@@ -109,7 +101,8 @@ def enviar_para_whatsapp(texto_critica):
 
 def teste_inicial_e_agendamento():
     global PROXIMO_ENVIO
-    time.sleep(5)
+    print("⏳ Aguardando estabilização do servidor para o disparo inicial...")
+    time.sleep(10)
     
     print("🚀 EXECUTANDO DISPARO DE TESTE COM NOTÍCIA REAL...")
     noticia_teste = buscar_dados_seguranca()
